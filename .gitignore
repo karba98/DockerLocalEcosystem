@@ -21,3 +21,4 @@ stack-ai/openhands-data/
 # Ignorar archivos de sistema
 *.bak
 .sonarlint/
+sonar-project.properties
