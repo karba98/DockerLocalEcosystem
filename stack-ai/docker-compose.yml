@@ -1,0 +1,40 @@
+services:
+  ollama:
+    image: ollama/ollama:latest
+    container_name: ollama
+    entrypoint: ["/bin/sh", "/entrypoint.sh"]
+    command: []
+    volumes:
+      - ./entrypoint.sh:/entrypoint.sh:ro
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - capabilities: [gpu]
+    expose:
+      - "11434"
+    networks:
+      - default
+
+  openwebui:
+    image: ghcr.io/open-webui/open-webui:main
+    container_name: openwebui
+    environment:
+      - PORT=8083
+      - OLLAMA_BASE_URL=http://ollama:11434/
+    ports:
+      - "3003:8083"
+    volumes:
+      - open-webui:/app/backend/data
+    restart: always
+    networks:
+      - default
+
+networks:
+  default:
+    name: proxy-network
+    external: true
+
+volumes:
+  open-webui:
+  openhands-data:

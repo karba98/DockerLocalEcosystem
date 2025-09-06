@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Servicios Locales</title>
+    <!-- Bootstrap CSS local -->
+    <link href="/static/bootstrap.min.css" rel="stylesheet">
+    <link rel="icon" href="https://getbootstrap.com/docs/5.3/assets/brand/bootstrap-logo-shadow.png">
+    <!-- Bootstrap Icons local -->
+    <link rel="stylesheet" href="/static/bootstrap-icons.min.css">
+    <style>
+        /* Icono de la casa blanco en modo oscuro */
+        body.dark-mode .logo-casa {
+            filter: drop-shadow(0 2px 8px rgba(0,0,0,0.6)) brightness(0) invert(1);
+        }
+        body {
+            background: linear-gradient(135deg, #f8fafc 0%, #e2eafc 100%);
+            min-height: 100vh;
+            transition: background 0.3s;
+        }
+        .service-card {
+            transition: transform 0.2s;
+            min-height: 270px;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+        }
+        .service-card:hover {
+            transform: scale(1.05);
+        }
+        body.dark-mode {
+            background: linear-gradient(135deg, #23272f 0%, #1a1d23 100%);
+            color: #f8fafc;
+        }
+        body.dark-mode .card {
+            background-color: #23272f;
+            color: #f8fafc;
+            border-color: #343a40;
+        }
+        body.dark-mode .text-primary {
+            color: #90caf9 !important;
+        }
+        body.dark-mode .text-info {
+            color: #64b5f6 !important;
+        }
+        body.dark-mode .text-warning {
+            color: #ffd54f !important;
+        }
+        body.dark-mode .text-muted {
+            color: #b0b0b0 !important;
+        }
+        body.dark-mode .form-switch .form-check-input:checked {
+            background-color: #343a40;
+            border-color: #90caf9;
+        }
+    </style>
+</head>
+<body>
+    <div class="container d-flex flex-column justify-content-center align-items-center min-vh-100">
+        <div class="d-flex justify-content-end w-100" style="position:absolute;top:1rem;right:2rem;z-index:10;">
+            <div class="form-check form-switch">
+                <input class="form-check-input" type="checkbox" id="darkModeSwitch">
+                <label class="form-check-label" for="darkModeSwitch">🌙 Modo oscuro</label>
+            </div>
+        </div>
+        <h1 class="mb-5 text-primary">
+            <img src="/static/home.png" alt="Casa" class="logo-casa" style="height:2em;width:2em;vertical-align:middle;margin-right:0.5em;" />
+            Servicios Locales
+        </h1>
+        <div class="row g-4">
+            <div class="col-12 col-md-6">
+                <a href="http://localhost:3003" class="text-decoration-none">
+                    <div class="card service-card shadow-sm text-center">
+                        <div class="card-body">
+                            <img src="/static/openwebui.png" alt="OpenWebUI" style="height:64px;width:64px;object-fit:contain;filter:drop-shadow(0 2px 8px rgba(0,0,0,0.6));" class="mb-2" />
+                            <h5 class="card-title mt-3">OpenWebUI <span>🤖</span></h5>
+                            <p class="card-text">Accede a la interfaz de OpenWebUI en el puerto 3003.</p>
+                        </div>
+                    </div>
+                </a>
+            </div>
+            <div class="col-12 col-md-6">
+                <a href="http://localhost:9000" class="text-decoration-none">
+                    <div class="card service-card shadow-sm text-center">
+                        <div class="card-body">
+                            <img src="/static/sonarqube.png" alt="SonarQube" style="height:64px;width:64px;object-fit:contain;" class="mb-2" />
+                            <h5 class="card-title mt-3">SonarQube <span>🛡️</span></h5>
+                            <p class="card-text">Accede a SonarQube en el puerto 9000 para análisis de código.</p>
+                        </div>
+                    </div>
+                </a>
+            </div>
+        </div>
+        <footer class="mt-5 text-muted small">
+            <span>Desarrollado con <img src="https://getbootstrap.com/docs/5.3/assets/brand/bootstrap-logo-shadow.png" alt="Bootstrap" style="height:1.2em;vertical-align:middle;margin-bottom:0.2em;"> Bootstrap</span>
+        </footer>
+    </div>
+    <!-- Bootstrap JS local -->
+    <script src="/static/bootstrap.bundle.min.js"></script>
+</script>
+    <script>
+        // Guardar preferencia en localStorage
+        const switchInput = document.getElementById('darkModeSwitch');
+        const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+        function setDarkMode(on) {
+            document.body.classList.toggle('dark-mode', on);
+            if (switchInput) switchInput.checked = on;
+            localStorage.setItem('darkMode', on ? '1' : '0');
+        }
+        // Inicializar
+        window.addEventListener('DOMContentLoaded', () => {
+            const saved = localStorage.getItem('darkMode');
+            setDarkMode(saved === '1' || (saved === null && prefersDark));
+            if (switchInput) {
+                switchInput.addEventListener('change', e => setDarkMode(e.target.checked));
+            }
+        });
+    </script>
+</body>
+</html>

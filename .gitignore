@@ -1,0 +1,22 @@
+# Archivos y carpetas a ignorar por Git
+*.env
+*.env.*
+*.log
+__pycache__/
+node_modules/
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+*.iml
+# Ignorar datos y backups
+/data/
+/backups/
+# Ignorar archivos temporales
+*.tmp
+*.swp
+# Ignorar archivos de SonarQube y OpenWebUI que puedan contener datos de usuario
+stack-ai/open-webui/
+stack-ai/openhands-data/
+# Ignorar archivos de sistema
+*.bak
