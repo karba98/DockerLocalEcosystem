@@ -31,10 +31,9 @@ services:
       - default
 
 networks:
-  default:
-    name: proxy-network
+  proxy-network:
     external: true
-
+    
 volumes:
   open-webui:
   openhands-data:

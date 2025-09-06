@@ -27,9 +27,8 @@ services:
       - sonarqube_data:/opt/sonarqube/data
       
 networks:
-  default:
-    external:
-      name: proxy-network
+  proxy-network:
+    external: true
 
 volumes:
   sonarqube_conf:
