@@ -20,3 +20,4 @@ stack-ai/open-webui/
 stack-ai/openhands-data/
 # Ignorar archivos de sistema
 *.bak
+.sonarlint/
