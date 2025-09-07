@@ -67,30 +67,3 @@ Start-Sleep -Seconds 10
 Write-Host "Estado de los contenedores activos:"
 docker ps --format 'table {{.Names}}\t{{.Status}}\t{{.Ports}}'
 
-# Comprobar contenedores definidos en los compose
-$expectedContainers = @()
-if (Test-Path './docker-compose.yml') {
-    $expectedContainers += (docker compose ps --services)
-}
-if (Test-Path './stack-ai/docker-compose.yml') {
-    $expectedContainers += (docker compose -f ./stack-ai/docker-compose.yml ps --services)
-}
-if (Test-Path './stack- sonarqube/docker-compose.yml') {
-    $expectedContainers += (docker compose -f './stack- sonarqube/docker-compose.yml' ps --services)
-}
-$expectedContainers = $expectedContainers | Sort-Object -Unique
-
-foreach ($svc in $expectedContainers) {
-    $container = docker ps -a --filter "name=$svc" --format "{{.Names}}:{{.Status}}"
-    if ($container -and ($container -notmatch 'Up')) {
-    Write-Host "El contenedor $svc no está levantado. Intentando iniciarlo..."
-        docker start $svc | Out-Null
-        Start-Sleep -Seconds 5
-        $container2 = docker ps -a --filter "name=$svc" --format "{{.Names}}:{{.Status}}"
-        if ($container2 -and ($container2 -notmatch 'Up')) {
-            Write-Host "El contenedor $svc sigue sin estar activo. Revise las trazas con: docker logs $svc"
-        } else {
-            Write-Host "El contenedor $svc se ha iniciado correctamente."
-        }
-    }
-}

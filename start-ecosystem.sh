@@ -73,29 +73,3 @@ sleep 10
 echo "Estado de los contenedores activos:"
 docker ps --format 'table {{.Names}}\t{{.Status}}\t{{.Ports}}'
 
-# Comprobar contenedores definidos en los compose
-expected_containers=()
-if [ -f docker-compose.yml ]; then
-  while read -r svc; do expected_containers+=("$svc"); done < <(docker compose ps --services)
-fi
-if [ -f stack-ai/docker-compose.yml ]; then
-  while read -r svc; do expected_containers+=("$svc"); done < <(docker compose -f stack-ai/docker-compose.yml ps --services)
-fi
-if [ -f "stack- sonarqube/docker-compose.yml" ]; then
-  while read -r svc; do expected_containers+=("$svc"); done < <(docker compose -f "stack- sonarqube/docker-compose.yml" ps --services)
-fi
-
-for svc in "${expected_containers[@]}"; do
-  status=$(docker ps -a --filter "name=$svc" --format "{{.Names}}:{{.Status}}")
-  if [[ $status != *Up* && -n $status ]]; then
-  echo "El contenedor $svc no está levantado. Intentando iniciarlo..."
-    docker start "$svc" >/dev/null
-    sleep 5
-    status2=$(docker ps -a --filter "name=$svc" --format "{{.Names}}:{{.Status}}")
-    if [[ $status2 != *Up* && -n $status2 ]]; then
-  echo "El contenedor $svc sigue sin estar activo. Revise las trazas con: docker logs $svc"
-    else
-  echo "El contenedor $svc se ha iniciado correctamente."
-    fi
-  fi
- done
