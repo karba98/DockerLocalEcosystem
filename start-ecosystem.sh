@@ -3,6 +3,12 @@
 
 set -e
 
+# Actualizar el repositorio automáticamente desde GitHub
+echo "Actualizando el repositorio desde GitHub..."
+if ! git pull --rebase; then
+  echo "No se pudo actualizar desde GitHub, se continúa con la ejecución."
+fi
+
 # Crear la red solo si no existe
 if ! docker network ls --format '{{.Name}}' | grep -q '^proxy-network$'; then
   echo "Creando red proxy-network..."

@@ -29,6 +29,7 @@ services:
     restart: always
     networks:
       - default
+      
   fooocus-api:
     image: konieshadow/fooocus-api
     ports:
