@@ -44,24 +44,28 @@ if (-not $networkExists) {
 }
 
 
-# Menú interactivo para seleccionar stacks
-$stacks = @()
-if (Test-Path './docker-compose.yml') { $stacks += @{name='Principal'; path='.'} }
-if (Test-Path './stack-ai/docker-compose.yml') { $stacks += @{name='stack-ai'; path='./stack-ai'} }
-if (Test-Path './stack- sonarqube/docker-compose.yml') { $stacks += @{name='stack-sonarqube'; path='./stack- sonarqube'} }
+# Descubrir stacks disponibles (usar nombre distinto a parámetro -Stacks para evitar colisión case-insensitive)
+$allStacks = @()
+if (Test-Path './docker-compose.yml') { $allStacks += @{name='Principal'; path='.'} }
+if (Test-Path './stack-ai/docker-compose.yml') { $allStacks += @{name='stack-ai'; path='./stack-ai'} }
+if (Test-Path './stack- sonarqube/docker-compose.yml') { $allStacks += @{name='stack-sonarqube'; path='./stack- sonarqube'} }
 
 if ($Stacks -and $Stacks.Count -gt 0) {
     # Selección no interactiva
     $map = @{}
-    foreach ($s in $stacks) { $map[$s.name.ToLower()] = $s }
+    foreach ($s in $allStacks) {
+        $n = $s['name']
+        if ($n) { $map[$n.ToLower()] = $s }
+    }
     $selected = @()
     if ($Stacks | Where-Object { $_.ToLower() -eq 'all' -or $_.ToLower() -eq 'todos' }) {
-        $selected = $stacks
+        $selected = $allStacks
     } else {
+        $validList = ($allStacks | ForEach-Object { $_['name'] }) -join ', '
         foreach ($raw in $Stacks) {
             $k = $raw.ToLower()
             if ($map.ContainsKey($k)) { $selected += $map[$k] } else {
-                Write-Host "Aviso: stack '$raw' no reconocido. Opciones válidas: $($stacks.name -join ', ') o 'All'" -ForegroundColor Yellow
+                Write-Host "Aviso: stack '$raw' no reconocido. Opciones válidas: $validList o 'All'" -ForegroundColor Yellow
             }
         }
     }
@@ -69,22 +73,23 @@ if ($Stacks -and $Stacks.Count -gt 0) {
         Write-Host "No se seleccionó ningún stack válido. Saliendo." -ForegroundColor Red
         return
     }
-    Write-Host "Stacks seleccionados (modo no interactivo): $($selected.name -join ', ')" -ForegroundColor Cyan
+    $selNames = $selected | ForEach-Object { $_['name'] }
+    Write-Host "Stacks seleccionados (modo no interactivo): $($selNames -join ', ')" -ForegroundColor Cyan
 } else {
     Write-Host "¿Qué stacks quieres levantar?"
-    for ($i=0; $i -lt $stacks.Count; $i++) {
-        Write-Host "$($i+1)) $($stacks[$i].name)"
+    for ($i=0; $i -lt $allStacks.Count; $i++) {
+        Write-Host "$($i+1)) $($allStacks[$i]['name'])"
     }
     Write-Host "A) Todos"
     $choice = Read-Host "Selecciona una opción (ej: 1 2 o A para todos)"
     if ($choice -eq 'A' -or $choice -eq 'a') {
-        $selected = $stacks
+        $selected = $allStacks
     } else {
         $selected = @()
         $nums = $choice -split ' '
         foreach ($n in $nums) {
-            if ($n -match '^[0-9]+$' -and [int]$n -ge 1 -and [int]$n -le $stacks.Count) {
-                $selected += $stacks[[int]$n-1]
+            if ($n -match '^[0-9]+$' -and [int]$n -ge 1 -and [int]$n -le $allStacks.Count) {
+                $selected += $allStacks[[int]$n-1]
             }
         }
     }
