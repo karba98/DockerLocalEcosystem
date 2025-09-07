@@ -35,6 +35,12 @@ services:
     build:
       context: .
       dockerfile: Dockerfile.fooocus-gpu
+      # Args de build opcionales:
+      #  INSTALL_TOOLKIT=1  -> instala el toolkit completo de CUDA 12.8 dentro de la imagen (más lento, sólo si lo necesitas)
+      #  TORCH_FORCE_VERSION -> versión de torch+cu a forzar (coincide con la del Dockerfile por defecto)
+      args:
+        INSTALL_TOOLKIT: "0"
+        TORCH_FORCE_VERSION: "2.7.0+cu128"
     ports:
       - "3004:8084"
     networks:
@@ -47,7 +53,8 @@ services:
       - PYTORCH_CUDA_ALLOC_CONF=expandable_segments:True
       - FORCE_CUDA=1
       # Pasar argumentos adicionales a Fooocus (opcional)
-      # - CLI_ARGS=--listen 0.0.0.0 --port 8084 --always-download-new-model
+  # Descomenta para pasar argumentos a fooocus (ejemplo):
+  # - CLI_ARGS=--listen 0.0.0.0 --port 8084 --always-download-new-model
       # Forzar CPU siempre (descomenta la siguiente línea si quieres evitar intento CUDA inicial)
       # - CUDA_VISIBLE_DEVICES=
     volumes:

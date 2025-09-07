@@ -4,7 +4,8 @@ param(
     [switch]$NoPull,
     [switch]$NoCache,
     [string[]]$Stacks,
-    [switch]$Auto
+    [switch]$Auto,
+    [switch]$List
 )
 
 # Validaciones de parámetros
@@ -49,6 +50,17 @@ $allStacks = @()
 if (Test-Path './docker-compose.yml') { $allStacks += @{name='Principal'; path='.'} }
 if (Test-Path './stack-ai/docker-compose.yml') { $allStacks += @{name='stack-ai'; path='./stack-ai'} }
 if (Test-Path './stack- sonarqube/docker-compose.yml') { $allStacks += @{name='stack-sonarqube'; path='./stack- sonarqube'} }
+
+if ($List) {
+    Write-Host "Stacks disponibles:" -ForegroundColor Cyan
+    for ($i=0; $i -lt $allStacks.Count; $i++) {
+        $n = $allStacks[$i]['name']
+        $p = $allStacks[$i]['path']
+        Write-Host ("[{0}] {1} -> {2}" -f ($i+1), $n, $p)
+    }
+    Write-Host "Use -Stacks <nombres> o -Auto para selección no interactiva." -ForegroundColor Yellow
+    return
+}
 
 if ($Stacks -and $Stacks.Count -gt 0) {
     # Selección no interactiva

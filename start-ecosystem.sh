@@ -9,6 +9,7 @@ BUILD_ONLY=0
 NO_PULL=0
 NO_CACHE=0
 AUTO=0
+LIST=0
 STACKS=()
 
 while [[ $# -gt 0 ]]; do
@@ -24,6 +25,7 @@ while [[ $# -gt 0 ]]; do
         STACKS+=("$1"); shift
       done
       ;;
+  -List|--list) LIST=1; shift ;;
     -h|--help)
       echo "Uso: $0 [opciones]\n"
       echo "Opciones:"; echo "  -Stacks <nombres>   Selecciona stacks (Principal stack-ai stack-sonarqube All)"; \
@@ -32,6 +34,7 @@ while [[ $# -gt 0 ]]; do
       echo "  -BuildOnly           Solo construye y sale"; \
       echo "  -NoPull              No ejecuta --pull en build"; \
       echo "  -NoCache             Fuerza --no-cache"; \
+  echo "  -List                Lista stacks disponibles y sale"; \
       echo "  -h/--help            Ayuda"; exit 0 ;;
     *) echo "Argumento no reconocido: $1"; exit 1 ;;
   esac
@@ -40,6 +43,12 @@ done
 if [[ $SKIP_BUILD -eq 1 && $BUILD_ONLY -eq 1 ]]; then
   echo "Parámetros incompatibles: -SkipBuild y -BuildOnly" >&2
   exit 1
+fi
+
+# Listar stacks y salir si se pasó -List
+if [[ $LIST -eq 1 ]]; then
+  echo "Stacks disponibles:" 
+  # Reconstruir arrays aquí porque la lógica de descubrimiento viene después si se cambia el orden
 fi
 
 # --- Actualizar repo ---
@@ -62,6 +71,14 @@ stack_names=()
 if [ -f docker-compose.yml ]; then stacks+=( "." ); stack_names+=("Principal"); fi
 if [ -f stack-ai/docker-compose.yml ]; then stacks+=("stack-ai"); stack_names+=("stack-ai"); fi
 if [ -f "stack- sonarqube/docker-compose.yml" ]; then stacks+=("stack- sonarqube"); stack_names+=("stack-sonarqube"); fi
+
+if [[ $LIST -eq 1 ]]; then
+  for i in "${!stack_names[@]}"; do
+    idx=$((i+1)); echo "[$idx] ${stack_names[$i]} -> ${stacks[$i]}"
+  done
+  echo "Use -Stacks <nombres> o -Auto para selección no interactiva." 
+  exit 0
+fi
 
 declare -A map
 for i in "${!stacks[@]}"; do

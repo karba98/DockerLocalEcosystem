@@ -73,6 +73,7 @@ Ambos scripts (`start-ecosystem.sh` y `start-ecosystem.ps1`) permiten levantar s
     -BuildOnly         Construye imágenes y sale sin levantar
     -NoPull            Evita --pull en build
     -NoCache           Fuerza rebuild completo (--no-cache)
+    -List              Lista stacks detectados y sale
 ```
 
 Ejemplos:
@@ -93,6 +94,7 @@ Ejemplos:
     -BuildOnly         Construye imágenes y sale sin levantar
     -NoPull            Evita --pull en build
     -NoCache           Fuerza rebuild completo (--no-cache)
+    -List              Lista stacks detectados y sale
 ```
 
 Ejemplos:
@@ -112,6 +114,34 @@ Características:
 - Imagen base PyTorch CUDA 12.x.
 - Script de arranque con fallback a CPU si la GPU no está soportada.
 - Expuesto en `http://localhost:3004` (puerto interno 8084).
+- Build Args opcionales (en `stack-ai/docker-compose.yml`):
+  - `INSTALL_TOOLKIT=1` instala el toolkit completo de CUDA 12.8 dentro de la imagen (más lento, sólo si realmente lo necesitas para compilar extensiones adicionales).
+  - `TORCH_FORCE_VERSION` versión exacta de torch que se reinstala (por defecto `2.7.0+cu128`).
+
+### GPUs muy nuevas (RTX 50xx / sm_120)
+
+Se fuerza la instalación de `torch==2.7.0+cu128` para soportar arquitecturas recientes. El contenedor usa base `nvidia/cuda:12.8.0-runtime-ubuntu22.04` y (opcionalmente) puede instalar el toolkit completo si activas el build arg `INSTALL_TOOLKIT=1`.
+
+Pasos recomendados si tu GPU es una RTX 50xx y tienes fallos CUDA al iniciar:
+1. Edita `stack-ai/docker-compose.yml` y cambia en `fooocus-api.build.args`:
+    ```yaml
+    INSTALL_TOOLKIT: "1"
+    ```
+2. (Opcional) Ajusta `CLI_ARGS` descomentando la línea en `environment` para añadir parámetros a Fooocus.
+3. Reconstruye sólo ese servicio:
+    ```powershell
+    cd stack-ai
+    docker compose build --no-cache fooocus-api
+    docker compose up -d fooocus-api
+    ```
+4. Verifica logs:
+    ```powershell
+    docker logs -f fooocus-api
+    ```
+
+Fallback CPU: Si la detección CUDA falla, el script interno relanza Fooocus en modo CPU automáticamente. Puedes forzar CPU siempre descomentando `CUDA_VISIBLE_DEVICES=` en la sección `environment`.
+
+Cache de modelos: Se persiste en el volumen `fooocus-cache` para evitar re-descargas al reconstruir la imagen.
 
 Reconstrucción manual:
 ```powershell
