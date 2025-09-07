@@ -5,10 +5,10 @@ set -e
 
 # Crear la red solo si no existe
 if ! docker network ls --format '{{.Name}}' | grep -q '^proxy-network$'; then
-  echo "🌐 Creando red proxy-network..."
+  echo "Creando red proxy-network..."
   docker network create proxy-network
 else
-  echo "✅ La red proxy-network ya existe."
+  echo "La red proxy-network ya existe."
 fi
 
 # Menú interactivo para seleccionar stacks
@@ -57,14 +57,14 @@ done
 
 # Levantar el principal al final si fue seleccionado
 if [ $principal_in_seleccion -eq 1 ]; then
-  echo "🚀 Levantando stack principal..."
+  echo "Levantando stack principal..."
   docker compose up -d
 fi
 
-echo "🎉 Todos los stacks levantados."
-echo "⏳ Esperando 10 segundos para comprobar el estado de los contenedores..."
+echo "Todos los stacks levantados."
+echo "Esperando 10 segundos para comprobar el estado de los contenedores..."
 sleep 10
-echo "📦 Estado de los contenedores activos:"
+echo "Estado de los contenedores activos:"
 docker ps --format 'table {{.Names}}\t{{.Status}}\t{{.Ports}}'
 
 # Comprobar contenedores definidos en los compose
@@ -82,14 +82,14 @@ fi
 for svc in "${expected_containers[@]}"; do
   status=$(docker ps -a --filter "name=$svc" --format "{{.Names}}:{{.Status}}")
   if [[ $status != *Up* && -n $status ]]; then
-    echo "⚠️  El contenedor $svc no está levantado. Intentando iniciarlo..."
+  echo "El contenedor $svc no está levantado. Intentando iniciarlo..."
     docker start "$svc" >/dev/null
     sleep 5
     status2=$(docker ps -a --filter "name=$svc" --format "{{.Names}}:{{.Status}}")
     if [[ $status2 != *Up* && -n $status2 ]]; then
-      echo "❌ El contenedor $svc sigue sin estar activo. Revise las trazas con: docker logs $svc"
+  echo "El contenedor $svc sigue sin estar activo. Revise las trazas con: docker logs $svc"
     else
-      echo "✅ El contenedor $svc se ha iniciado correctamente."
+  echo "El contenedor $svc se ha iniciado correctamente."
     fi
   fi
  done
