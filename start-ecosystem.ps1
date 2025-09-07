@@ -1,5 +1,29 @@
+param(
+    [switch]$SkipBuild,
+    [switch]$BuildOnly,
+    [switch]$NoPull,
+    [switch]$NoCache,
+    [string[]]$Stacks,
+    [switch]$Auto
+)
+
+# Validaciones de parámetros
+if ($SkipBuild -and $BuildOnly) {
+    Write-Host "Parámetros incompatibles: -SkipBuild y -BuildOnly no pueden usarse juntos." -ForegroundColor Red
+    exit 1
+}
+if ($SkipBuild -and ($NoCache -or $NoPull)) {
+    Write-Host "Aviso: -SkipBuild ignora -NoCache y -NoPull." -ForegroundColor Yellow
+}
+
+# Modo automático: selecciona todos los stacks si no se pasó -Stacks
+if ($Auto) {
+    if (-not $Stacks -or $Stacks.Count -eq 0) { $Stacks = @('All') }
+    Write-Host "Modo automático activado (-Auto)." -ForegroundColor Cyan
+}
+
 # start-ecosystem.ps1
-# Script para PowerShell: crea la red proxy-network y levanta los stacks
+# Script para PowerShell: crea la red proxy-network, opcionalmente construye imágenes y levanta los stacks
 
 # Actualizar el repositorio automáticamente desde GitHub
 Write-Host "Actualizando el repositorio desde GitHub..."
@@ -26,25 +50,84 @@ if (Test-Path './docker-compose.yml') { $stacks += @{name='Principal'; path='.'}
 if (Test-Path './stack-ai/docker-compose.yml') { $stacks += @{name='stack-ai'; path='./stack-ai'} }
 if (Test-Path './stack- sonarqube/docker-compose.yml') { $stacks += @{name='stack-sonarqube'; path='./stack- sonarqube'} }
 
-Write-Host "¿Qué stacks quieres levantar?"
-for ($i=0; $i -lt $stacks.Count; $i++) {
-    Write-Host "$($i+1)) $($stacks[$i].name)"
-}
-Write-Host "A) Todos"
-$choice = Read-Host "Selecciona una opción (ej: 1 2 o A para todos)"
-
-if ($choice -eq 'A' -or $choice -eq 'a') {
-    $selected = $stacks
-} else {
+if ($Stacks -and $Stacks.Count -gt 0) {
+    # Selección no interactiva
+    $map = @{}
+    foreach ($s in $stacks) { $map[$s.name.ToLower()] = $s }
     $selected = @()
-    $nums = $choice -split ' '
-    foreach ($n in $nums) {
-        if ($n -match '^[0-9]+$' -and [int]$n -ge 1 -and [int]$n -le $stacks.Count) {
-            $selected += $stacks[[int]$n-1]
+    if ($Stacks | Where-Object { $_.ToLower() -eq 'all' -or $_.ToLower() -eq 'todos' }) {
+        $selected = $stacks
+    } else {
+        foreach ($raw in $Stacks) {
+            $k = $raw.ToLower()
+            if ($map.ContainsKey($k)) { $selected += $map[$k] } else {
+                Write-Host "Aviso: stack '$raw' no reconocido. Opciones válidas: $($stacks.name -join ', ') o 'All'" -ForegroundColor Yellow
+            }
+        }
+    }
+    if (-not $selected -or $selected.Count -eq 0) {
+        Write-Host "No se seleccionó ningún stack válido. Saliendo." -ForegroundColor Red
+        return
+    }
+    Write-Host "Stacks seleccionados (modo no interactivo): $($selected.name -join ', ')" -ForegroundColor Cyan
+} else {
+    Write-Host "¿Qué stacks quieres levantar?"
+    for ($i=0; $i -lt $stacks.Count; $i++) {
+        Write-Host "$($i+1)) $($stacks[$i].name)"
+    }
+    Write-Host "A) Todos"
+    $choice = Read-Host "Selecciona una opción (ej: 1 2 o A para todos)"
+    if ($choice -eq 'A' -or $choice -eq 'a') {
+        $selected = $stacks
+    } else {
+        $selected = @()
+        $nums = $choice -split ' '
+        foreach ($n in $nums) {
+            if ($n -match '^[0-9]+$' -and [int]$n -ge 1 -and [int]$n -le $stacks.Count) {
+                $selected += $stacks[[int]$n-1]
+            }
         }
     }
 }
 
+
+# Build helper
+function Invoke-StackBuild {
+    param(
+        [string]$StackPath,
+        [string]$StackName
+    )
+    if ($SkipBuild) { return }
+    if (-not (Test-Path (Join-Path $StackPath 'docker-compose.yml'))) { return }
+    $flags = @()
+    if (-not $NoPull) { $flags += '--pull' }
+    if ($NoCache) { $flags += '--no-cache' }
+    $flagStr = if ($flags.Count -gt 0) { $flags -join ' ' } else { '(sin flags)' }
+    Write-Host "Construyendo imágenes para $StackName (docker compose build $flagStr)..." -ForegroundColor Cyan
+    Push-Location $StackPath
+    try {
+        if ($flags.Count -gt 0) { docker compose build @flags } else { docker compose build }
+    } catch {
+        Write-Host "Fallo al construir imágenes en $StackName, se continúa: $($_.Exception.Message)" -ForegroundColor Yellow
+    } finally { Pop-Location }
+}
+
+# Construir primero (excepto principal) si procede
+foreach ($stack in $selected) {
+    if ($stack.path -ne '.') {
+        Invoke-StackBuild -StackPath $stack.path -StackName $stack.name
+    }
+}
+
+# Construir principal al final si fue seleccionado
+if ($selected | Where-Object { $_.path -eq '.' }) {
+    Invoke-StackBuild -StackPath '.' -StackName 'principal'
+}
+
+if ($BuildOnly) {
+    Write-Host "Se solicitó solo build (-BuildOnly). Fin." -ForegroundColor Green
+    return
+}
 
 # Levantar todos los stacks seleccionados excepto el principal (proxy-nginx)
 foreach ($stack in $selected) {

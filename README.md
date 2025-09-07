@@ -1,6 +1,6 @@
-# 🚀 Docker Local Ecosystem
+# Docker Local Ecosystem
 
-Un ecosistema local de servicios Docker para desarrollo y pruebas, con Nginx como proxy, OpenWebUI, SonarQube y gestión sencilla de modelos Ollama.
+Ecosistema local de servicios Docker para desarrollo y pruebas: proxy Nginx, IA (Ollama + OpenWebUI + Fooocus opcional), SonarQube y utilidades.
 
 ---
 
@@ -28,29 +28,30 @@ flowchart LR
 
 ---
 
-## 📦 Servicios incluidos
+## Servicios incluidos
 
-- 🌐 **Nginx**: Proxy inverso y página de inicio moderna.
-- 🤖 **OpenWebUI**: Interfaz web para LLMs y Ollama.
-- 🛡️ **SonarQube**: Análisis de calidad de código.
-- 🦙 **Ollama**: Servidor de modelos LLM locales.
+- **Nginx** (proxy-nginx): Proxy inverso y página de inicio.
+- **Ollama**: Servidor de modelos LLM locales.
+- **OpenWebUI**: Interfaz web para trabajar con Ollama.
+- **Fooocus API (experimental)**: Generación de imágenes (requiere GPU; soporta fallback CPU si no hay soporte CUDA para tu arquitectura).
+- **SonarQube**: Análisis de calidad de código.
 
 ---
 
-## ⚡ Instalación y arranque
+## Instalación y arranque
 
 1. Asegúrate de tener Docker y Docker Compose instalados.
 2. Clona este repositorio y sitúate en la raíz del proyecto.
 3. Ejecuta uno de estos scripts según tu sistema:
 
-### En Linux/Mac/WSL:
+### En Linux/Mac/WSL
 ```bash
 git clone https://github.com/karba98/docker-local-ecosystem.git
 cd docker-local-ecosystem
 bash start-ecosystem.sh
 ```
 
-### En Windows (PowerShell):
+### En Windows (PowerShell)
 ```powershell
 git clone https://github.com/karba98/docker-local-ecosystem.git
 cd docker-local-ecosystem
@@ -59,7 +60,69 @@ cd docker-local-ecosystem
 
 ---
 
-## 📝 Notas útiles
+## Scripts de arranque
+
+Ambos scripts (`start-ecosystem.sh` y `start-ecosystem.ps1`) permiten levantar selectivamente los stacks.
+
+### PowerShell (`start-ecosystem.ps1`) parámetros
+
+```
+    -Stacks <lista>    Selección no interactiva (ej: -Stacks Principal stack-ai)
+    -Auto              Equivalente a seleccionar todos los stacks (combina con otros flags)
+    -SkipBuild         No ejecuta docker compose build
+    -BuildOnly         Construye imágenes y sale sin levantar
+    -NoPull            Evita --pull en build
+    -NoCache           Fuerza rebuild completo (--no-cache)
+```
+
+Ejemplos:
+
+```powershell
+./start-ecosystem.ps1 -Auto
+./start-ecosystem.ps1 -Stacks stack-ai -NoCache -NoPull
+./start-ecosystem.ps1 -Stacks Principal stack-ai -BuildOnly
+./start-ecosystem.ps1 -Auto -SkipBuild
+```
+
+### Bash (`start-ecosystem.sh`) parámetros
+
+```
+    -Stacks <lista>    Selección no interactiva (ej: -Stacks Principal stack-ai)
+    -Auto              Selecciona todos los stacks
+    -SkipBuild         No ejecuta docker compose build
+    -BuildOnly         Construye imágenes y sale sin levantar
+    -NoPull            Evita --pull en build
+    -NoCache           Fuerza rebuild completo (--no-cache)
+```
+
+Ejemplos:
+
+```bash
+./start-ecosystem.sh -Auto
+./start-ecosystem.sh -Stacks stack-ai -NoCache -NoPull
+./start-ecosystem.sh -Stacks Principal stack-ai -BuildOnly
+./start-ecosystem.sh -Auto -SkipBuild
+```
+
+## Fooocus API (experimental)
+
+Incluido dentro de `stack-ai` como build local (`Dockerfile.fooocus-gpu`).
+
+Características:
+- Imagen base PyTorch CUDA 12.x.
+- Script de arranque con fallback a CPU si la GPU no está soportada.
+- Expuesto en `http://localhost:3004` (puerto interno 8084).
+
+Reconstrucción manual:
+```powershell
+cd stack-ai
+docker compose build fooocus-api
+docker compose up -d fooocus-api
+```
+
+Forzar CPU (si tu GPU muy nueva falla): descomenta `CUDA_VISIBLE_DEVICES=` en el servicio `fooocus-api` dentro de `stack-ai/docker-compose.yml`.
+
+## Notas útiles
 
 - El script te permite elegir qué stacks levantar o lanzar todo el ecosistema.
 - Se actualiza automáticamente desde GitHub al arrancar.
@@ -72,12 +135,14 @@ docker exec proxy-nginx nginx -s reload
 
 ---
 
-## 📂 Estructura del proyecto
+## Estructura del proyecto
 
 ```text
 ├── docker-compose.yml           # Stack principal (nginx)
 ├── stack-ai/
-│   └── docker-compose.yml       # Stack de IA (Ollama, OpenWebUI)
+│   ├── docker-compose.yml       # Stack de IA (Ollama, OpenWebUI, Fooocus opcional)
+│   ├── Dockerfile.fooocus-gpu    # Build de Fooocus experimental
+│   └── start.sh                  # Script de arranque interno Fooocus
 ├── stack- sonarqube/
 │   └── docker-compose.yml       # Stack de SonarQube
 ├── static/                      # Recursos estáticos (Bootstrap, iconos, logos)
@@ -90,7 +155,7 @@ docker exec proxy-nginx nginx -s reload
 
 ---
 
-## 💡 Créditos y recursos
+## Créditos y recursos
 
 - [OpenWebUI](https://github.com/open-webui/open-webui)
 - [Ollama](https://github.com/jmorganca/ollama)

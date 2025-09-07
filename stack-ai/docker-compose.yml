@@ -31,16 +31,40 @@ services:
       - default
 
   fooocus-api:
-    image: konieshadow/fooocus-api
+    # Imagen personalizada para intentar dar soporte a GPUs nuevas (sm_120 / RTX 50xx)
+    build:
+      context: .
+      dockerfile: Dockerfile.fooocus-gpu
     ports:
       - "3004:8084"
     networks:
       - default
+    # Soporte GPU (si la arquitectura no está soportada, el script interno hace fallback CPU)
+    gpus: all
+    environment:
+      - NVIDIA_VISIBLE_DEVICES=all
+      - NVIDIA_DRIVER_CAPABILITIES=compute,utility
+      - PYTORCH_CUDA_ALLOC_CONF=expandable_segments:True
+      - FORCE_CUDA=1
+      # Pasar argumentos adicionales a Fooocus (opcional)
+      # - CLI_ARGS=--listen 0.0.0.0 --port 8084 --always-download-new-model
+      # Forzar CPU siempre (descomenta la siguiente línea si quieres evitar intento CUDA inicial)
+      # - CUDA_VISIBLE_DEVICES=
+    volumes:
+      # Cache modelos/pesos para evitar re-descargas entre reconstrucciones
+      - fooocus-cache:/app/fooocus/models
+    restart: unless-stopped
     deploy:
       resources:
         reservations:
           devices:
             - capabilities: [gpu]
+    healthcheck:
+      test: ["CMD-SHELL", "curl -sf http://localhost:8084 || exit 1"]
+      interval: 30s
+      timeout: 5s
+      retries: 5
+      start_period: 120s
 
 networks:
   default:
@@ -50,3 +74,4 @@ networks:
 volumes:
   open-webui:
   openhands-data:
+  fooocus-cache:
