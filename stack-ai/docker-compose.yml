@@ -60,6 +60,8 @@ services:
     volumes:
       # Cache modelos/pesos para evitar re-descargas entre reconstrucciones
       - fooocus-cache:/app/fooocus/models
+  # (Opcional) Montar start.sh local para iterar sin rebuild completo:
+  # - ./start.sh:/app/start.sh:ro
     restart: unless-stopped
     deploy:
       resources:

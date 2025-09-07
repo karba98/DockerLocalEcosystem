@@ -71,23 +71,34 @@
         </h1>
         <div class="row g-4">
             <div class="col-12 col-md-6">
-                <a href="http://localhost:3003" class="text-decoration-none">
+                <a href="/openwebui/" class="text-decoration-none">
                     <div class="card service-card shadow-sm text-center">
                         <div class="card-body">
                             <img src="/static/openwebui.png" alt="OpenWebUI" style="height:64px;width:64px;object-fit:contain;filter:drop-shadow(0 2px 8px rgba(0,0,0,0.6));" class="mb-2" />
                             <h5 class="card-title mt-3">OpenWebUI <span>🤖</span></h5>
-                            <p class="card-text">Accede a la interfaz de OpenWebUI en el puerto 3003.</p>
+                            <p class="card-text">Interfaz para modelos vía Ollama (ruta /openwebui/).</p>
                         </div>
                     </div>
                 </a>
             </div>
             <div class="col-12 col-md-6">
-                <a href="http://localhost:9000" class="text-decoration-none">
+                <a href="/sonarqube/" class="text-decoration-none">
                     <div class="card service-card shadow-sm text-center">
                         <div class="card-body">
                             <img src="/static/sonarqube.png" alt="SonarQube" style="height:64px;width:64px;object-fit:contain;" class="mb-2" />
                             <h5 class="card-title mt-3">SonarQube <span>🛡️</span></h5>
-                            <p class="card-text">Accede a SonarQube en el puerto 9000 para análisis de código.</p>
+                            <p class="card-text">Plataforma de análisis de código (/sonarqube/).</p>
+                        </div>
+                    </div>
+                </a>
+            </div>
+            <div class="col-12 col-md-6">
+                <a href="/fooocus/" class="text-decoration-none">
+                    <div class="card service-card shadow-sm text-center">
+                        <div class="card-body">
+                            <img src="/static/home.png" alt="Fooocus" style="height:64px;width:64px;object-fit:contain;filter:drop-shadow(0 2px 8px rgba(0,0,0,0.6));" class="mb-2" />
+                            <h5 class="card-title mt-3">Fooocus <span>🖼️</span></h5>
+                            <p class="card-text">API de generación de imágenes (/fooocus/).</p>
                         </div>
                     </div>
                 </a>
@@ -99,7 +110,6 @@
     </div>
     <!-- Bootstrap JS local -->
     <script src="/static/bootstrap.bundle.min.js"></script>
-</script>
     <script>
         // Guardar preferencia en localStorage
         const switchInput = document.getElementById('darkModeSwitch');
