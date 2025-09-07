@@ -145,6 +145,8 @@ docker network connect proxy-network <contenedor>
 | Fooocus sólo CPU | logs fallback | Rebuild / toolkit |
 | OpenWebUI sin modelos | logs ollama | Esperar arranque Ollama |
 | SonarQube lento | logs iniciales | Esperar primer arranque |
+| /bin/bash^M bad interpreter | Clonado con CRLF | Rebuild (Dockerfile limpia CR) |
+| sleep: invalid time interval '5\r' | CRLF en `entrypoint.sh` | Re-clonar (autofix .gitattributes) o `sed -i 's/\r$//' stack-ai/entrypoint.sh` |
 
 Logs:
 ```bash
@@ -180,6 +182,7 @@ Medidas para asegurar que `entrypoint.sh` y `start.sh` se copian correctamente:
     sha256sum stack-ai/start.sh
     ```
 8. Para `entrypoint.sh` (ollama) ya se usa bind mount `./entrypoint.sh:/entrypoint.sh:ro` (si lo editas, basta reiniciar el contenedor).
+9. Variable `OLLAMA_AUTO_PULL` permite elegir modelo inicial (por defecto llama2). `OLLAMA_MAX_WAIT` controla espera de readiness.
 
 Problemas típicos tras clonar en máquina nueva:
 | Síntoma | Causa | Fix |
