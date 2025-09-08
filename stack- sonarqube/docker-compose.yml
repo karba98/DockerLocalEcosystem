@@ -8,6 +8,8 @@ services:
       POSTGRES_DB: sonarqube
     volumes:
       - sonarqube_db_data:/var/lib/postgresql/data
+    networks:
+      - proxy-network
 
   sonarqube:
     image: sonarqube:latest
@@ -25,6 +27,8 @@ services:
       - sonarqube_extensions:/opt/sonarqube/extensions
       - sonarqube_logs:/opt/sonarqube/logs
       - sonarqube_data:/opt/sonarqube/data
+    networks:
+      - proxy-network
       
 networks:
   proxy-network:

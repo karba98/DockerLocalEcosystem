@@ -15,6 +15,7 @@ flowchart LR
         OW[OpenWebUI:8083]
         F[Fooocus:8084]
         S[SonarQube:9000]
+    P[Portainer:9000\n(ext 9100)]
     end
     U -->|http://localhost| N
     N -->|/ollama/*| OL
@@ -33,12 +34,15 @@ Rutas: /ollama/ /openwebui/ /fooocus/ /sonarqube/
 - OpenWebUI (UI)
 - Fooocus API (texto→imagen, fallback CPU)
 - SonarQube (calidad código)
+- Portainer (gestión Docker)
+    - Acceso: http://localhost:9100 (o 9443 HTTPS)
 
 ---
 ## Stacks
 | Nombre | Ruta | Contenido |
 |--------|------|-----------|
-| Principal | ./ | Nginx + landing |
+| Principal | ./ | Nginx Proxy Manager |
+| Portainer | (en principal) | Gestión visual de contenedores (http://localhost:9100) |
 | stack-ai | ./stack-ai | Ollama, OpenWebUI, Fooocus |
 | stack-sonarqube | ./stack- sonarqube | SonarQube + Postgres |
 
@@ -128,6 +132,7 @@ Ruta: /sonarqube/
 |---------|-----|
 | open-webui | Datos OpenWebUI |
 | fooocus-cache | Modelos/Pesos Fooocus |
+| portainer-data | Datos Portainer |
 
 ---
 ## Red
@@ -183,6 +188,9 @@ Medidas para asegurar que `entrypoint.sh` y `start.sh` se copian correctamente:
     ```
 8. Para `entrypoint.sh` (ollama) ya se usa bind mount `./entrypoint.sh:/entrypoint.sh:ro` (si lo editas, basta reiniciar el contenedor).
 9. Variable `OLLAMA_AUTO_PULL` permite elegir modelo inicial (por defecto llama2). `OLLAMA_MAX_WAIT` controla espera de readiness.
+10. Las carpetas `data/nginx-proxy-manager/{data,letsencrypt}` se crean automáticamente si no existen al levantar el stack principal.
+11. Si existía un contenedor antiguo `proxy-nginx` basado en `nginx:latest` se elimina automáticamente antes de levantar Nginx Proxy Manager para evitar servir un `index.html` obsoleto.
+12. Portainer se inicia junto al stack principal; acceso inicial: http://localhost:9100 (crear usuario admin la primera vez).
 
 Problemas típicos tras clonar en máquina nueva:
 | Síntoma | Causa | Fix |
@@ -205,9 +213,8 @@ Problemas típicos tras clonar en máquina nueva:
 │   └── start.sh
 ├── stack- sonarqube/
 │   └── docker-compose.yml
-├── static/
-├── index.html
-├── nginx.conf
+├── data/
+│   └── nginx-proxy-manager/
 ├── start-ecosystem.sh
 ├── start-ecosystem.ps1
 └── README.md

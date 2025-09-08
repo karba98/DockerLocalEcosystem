@@ -177,7 +177,18 @@ done
 for p in "${selected[@]}"; do
   if [[ $p == "." ]]; then
     echo "Levantando stack principal..."
+    # Eliminar contenedor legacy si existe con imagen nginx:*
+    if docker ps -a --format '{{.Names}} {{.Image}}' | grep -q '^proxy-nginx nginx'; then
+      echo "Eliminando contenedor legacy proxy-nginx (nginx base)"
+      docker rm -f proxy-nginx >/dev/null 2>&1 || true
+    fi
+  # Crear carpetas Nginx Proxy Manager
+  base="$(pwd)/data/nginx-proxy-manager"
+  mkdir -p "$base/data" "$base/letsencrypt"
     docker compose up -d
+    if docker ps --format '{{.Names}}' | grep -q '^portainer$'; then
+      echo "Portainer disponible en: http://localhost:9100"
+    fi
   fi
 done
 

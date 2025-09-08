@@ -138,6 +138,26 @@ foreach ($stack in $selected) {
 
 # Construir principal al final si fue seleccionado
 if ($selected | Where-Object { $_.path -eq '.' }) {
+    # Eliminar contenedor legacy (nginx:latest) si existe antes de reconstruir
+    try {
+        $legacyLine = docker ps -a --format '{{.Names}} {{.Image}}' | Select-String -Pattern '^proxy-nginx '
+        if ($legacyLine) {
+            $parts = ($legacyLine -split ' ')
+            if ($parts.Length -ge 2) {
+                $img = $parts[1]
+                if ($img -like 'nginx:*' -or $img -eq 'nginx') {
+                    Write-Host "Eliminando contenedor legacy proxy-nginx ($img)" -ForegroundColor Yellow
+                    docker rm -f proxy-nginx | Out-Null
+                }
+            }
+        }
+    } catch { }
+    # Crear carpetas Nginx Proxy Manager si no existen
+    $npmBase = Join-Path (Get-Location) 'data/nginx-proxy-manager'
+    $dirs = @('data','letsencrypt') | ForEach-Object { Join-Path $npmBase $_ }
+    foreach ($d in $dirs) {
+        if (-not (Test-Path $d)) { New-Item -ItemType Directory -Path $d | Out-Null; Write-Host "Creada carpeta: $d" -ForegroundColor DarkGray }
+    }
     Invoke-StackBuild -StackPath '.' -StackName 'principal'
 }
 
@@ -158,7 +178,28 @@ foreach ($stack in $selected) {
 # Levantar el principal (proxy-nginx) al final si fue seleccionado
 if ($selected | Where-Object { $_.path -eq '.' }) {
     Write-Host "Levantando stack principal (proxy-nginx)..."
+    # Asegurar no queda contenedor legacy
+    try {
+        $legacyLine = docker ps -a --format '{{.Names}} {{.Image}}' | Select-String -Pattern '^proxy-nginx '
+        if ($legacyLine) {
+            $parts = ($legacyLine -split ' ')
+            if ($parts.Length -ge 2) {
+                $img = $parts[1]
+                if ($img -like 'nginx:*' -or $img -eq 'nginx') {
+                    Write-Host "Eliminando contenedor legacy proxy-nginx ($img)" -ForegroundColor Yellow
+                    docker rm -f proxy-nginx | Out-Null
+                }
+            }
+        }
+    } catch { }
+    # Asegurar nuevamente carpetas antes de levantar
+    $npmBase = Join-Path (Get-Location) 'data/nginx-proxy-manager'
+    $dirs = @('data','letsencrypt') | ForEach-Object { Join-Path $npmBase $_ }
+    foreach ($d in $dirs) { if (-not (Test-Path $d)) { New-Item -ItemType Directory -Path $d | Out-Null } }
     docker compose up -d
+    if (docker ps --format '{{.Names}}' | Select-String -Quiet '^portainer$') {
+        Write-Host "Portainer disponible en: http://localhost:9100" -ForegroundColor Green
+    }
 }
 
 Write-Host "Todos los stacks levantados."
