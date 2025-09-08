@@ -1,15 +1,15 @@
-# Stack AI
+# Stack AI 🤖
 
 Servicios de IA locales: Ollama (LLMs), OpenWebUI (UI), Fooocus (text-to-image).
 
-## Componentes
+## 🧩 Componentes
 | Servicio | Imagen/Base | Puerto interno | Puerto host | Persistencia |
 |----------|-------------|---------------|-------------|--------------|
 | ollama | ollama/ollama:latest | 11434 | (no mapeado) | (sin volumen) |
 | openwebui | ghcr.io/open-webui/open-webui:main | 8083 | 3003 | `open-webui` |
 | fooocus-api | build local | 8084 | 3004 | `fooocus-cache` |
 
-## Arquitectura
+## 🗺️ Arquitectura
 ```mermaid
 flowchart LR
   subgraph proxy-network
@@ -30,12 +30,12 @@ flowchart LR
   OW --> OW[(open-webui)]
 ```
 
-## Flujo de arranque
+## ⚙️ Flujo de arranque
 1. Ollama inicia y opcionalmente descarga `OLLAMA_AUTO_PULL`.
 2. OpenWebUI espera a Ollama.
 3. Fooocus intenta GPU → fallback CPU.
 
-## Pruebas rápidas
+## ⚡ Pruebas rápidas
 Listar modelos:
 ```
 docker exec -it ollama ollama list
@@ -49,7 +49,7 @@ Ping Fooocus:
 curl -sf http://localhost:3004 | head -n 5
 ```
 
-## Variables clave
+## 🔑 Variables clave
 | Variable | Servicio | Uso |
 |----------|----------|-----|
 | OLLAMA_AUTO_PULL | ollama | Modelo inicial |
@@ -59,7 +59,7 @@ curl -sf http://localhost:3004 | head -n 5
 | TORCH_FORCE_VERSION | build fooocus | Torch específica |
 | INSTALL_TOOLKIT | build fooocus | Instala toolkit completo |
 
-## Persistencia Ollama
+## 💾 Persistencia Ollama
 ```
   ollama:
     volumes:
@@ -68,7 +68,7 @@ volumes:
   ollama-data:
 ```
 
-## Rebuild Fooocus
+## 🔁 Rebuild Fooocus
 ```
 docker compose build --no-cache fooocus-api
 docker compose up -d fooocus-api
@@ -82,7 +82,7 @@ Torch custom:
 docker compose build --build-arg TORCH_FORCE_VERSION=torch==2.7.0+cu128 fooocus-api
 ```
 
-## Salud / Diagnóstico
+## 🩺 Salud / Diagnóstico
 ```
 docker ps --format 'table {{.Names}}\t{{.Status}}\t{{.Ports}}'
 docker logs -f stack-ai-fooocus-api-1
@@ -94,14 +94,14 @@ import torch;print(torch.__version__, torch.cuda.is_available(), torch.cuda.devi
 PY
 ```
 
-## Integración Proxy
+## 🌐 Integración Proxy
 | Host sugerido | Internal | Descripción |
 |---------------|----------|-------------|
 | openwebui.local | openwebui:8083 | UI LLM |
 | ollama.local | ollama:11434 | API LLM |
 | fooocus.local | fooocus-api:8084 | Text2Image |
 
-## Problemas comunes
+## 🐞 Problemas comunes
 | Síntoma | Causa | Fix |
 |---------|-------|-----|
 | OpenWebUI vacío | Ollama no listo | Esperar / logs |
@@ -109,10 +109,10 @@ PY
 | Error Torch GPU | GPU nueva | Fallback CPU / toolkit |
 | Modelos perdidos | Sin volumen Ollama | Añadir ollama-data |
 
-## Roadmap
+## 🚀 Roadmap
 * Monitor tamaño cache Fooocus.
 * Limpieza selectiva modelos.
 * Export prompts.
 
-## Créditos
+## 🙏 Créditos
 Ollama · OpenWebUI · Fooocus · PyTorch · Gradio

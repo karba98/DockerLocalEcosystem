@@ -1,4 +1,4 @@
-# Docker Local Ecosystem
+# Docker Local Ecosystem 🐳🚀
 
 Ecosistema local: Nginx, Ollama, OpenWebUI, Fooocus (imágenes), SonarQube.
 
@@ -15,9 +15,9 @@ flowchart LR
         OW[OpenWebUI:8083]
         F[Fooocus:8084]
         S[SonarQube:9000]
-    P[Portainer:9000\n(ext 9100)]
+        P[Portainer:9100]
     end
-    U -->|http://localhost| N
+    U -->|HTTP| N
     N -->|/ollama/*| OL
     N -->|/openwebui/*| OW
     %% (Fooocus y Sonar pueden estar comentados en nginx.conf si no se usan)
@@ -25,10 +25,10 @@ flowchart LR
     N -->|/sonarqube/*| S
     OW -->|REST /ollama| OL
 ```
-Rutas: /ollama/ /openwebui/ /fooocus/ /sonarqube/
+Rutas: /ollama/ /openwebui/ /fooocus/ /sonarqube/  (Portainer vía puerto 9100 directo o proxy host)
 
 ---
-## Servicios
+## 🔧 Servicios
 - proxy-nginx
 - Ollama (LLMs)
 - OpenWebUI (UI)
@@ -38,7 +38,7 @@ Rutas: /ollama/ /openwebui/ /fooocus/ /sonarqube/
     - Acceso: http://localhost:9100 (o 9443 HTTPS)
 
 ---
-## Stacks
+## 🧱 Stacks
 | Nombre | Ruta | Contenido |
 |--------|------|-----------|
 | Principal | ./ | Nginx Proxy Manager |
@@ -47,11 +47,11 @@ Rutas: /ollama/ /openwebui/ /fooocus/ /sonarqube/
 | stack-sonarqube | ./stack- sonarqube | SonarQube + Postgres |
 
 ---
-## Requisitos
+## ✅ Requisitos
 Docker + Compose. (GPU) Drivers NVIDIA + nvidia-container-toolkit.
 
 ---
-## Instalación rápida
+## ⚡ Instalación rápida
 Linux / macOS / WSL:
 ```bash
 git clone https://github.com/karba98/docker-local-ecosystem.git
@@ -66,7 +66,7 @@ cd docker-local-ecosystem
 ```
 
 ---
-## Scripts (PowerShell / Bash)
+## 🛠️ Scripts (PowerShell / Bash)
 Parámetros:
 ```
 -Stacks <lista>   Principal stack-ai stack-sonarqube All
@@ -91,7 +91,7 @@ Ejemplos Bash:
 Notas: build de secundarios → principal. `-SkipBuild` ignora `-NoPull` y `-NoCache`.
 
 ---
-## Fooocus API
+## 🎨 Fooocus API
 Base CUDA 12.8 (runtime), fuerza torch 2.7.0+cu128 (RTX 50xx), fallback CPU. Puerto interno 8084.
 
 Build args (`stack-ai/docker-compose.yml`):
@@ -116,7 +116,7 @@ Problemas comunes:
 | Descarga lenta | Sin cache | Revisar volumen `fooocus-cache` |
 
 ---
-## SonarQube
+## 🧪 SonarQube
 Ejemplo `sonar-project.properties`:
 ```
 sonar.projectKey=demo
@@ -127,7 +127,7 @@ sonar.sourceEncoding=UTF-8
 Ruta: /sonarqube/
 
 ---
-## Volúmenes
+## 💾 Volúmenes
 | Volumen | Uso |
 |---------|-----|
 | open-webui | Datos OpenWebUI |
@@ -135,14 +135,14 @@ Ruta: /sonarqube/
 | portainer-data | Datos Portainer |
 
 ---
-## Red
+## 🌐 Red
 Red externa: `proxy-network`.
 ```bash
 docker network connect proxy-network <contenedor>
 ```
 
 ---
-## Troubleshooting
+## 🩺 Troubleshooting
 | Problema | Pista | Solución |
 |----------|-------|----------|
 | Puerto 80 ocupado | netstat/lsof | Liberar o cambiar puerto |
@@ -160,7 +160,7 @@ docker logs -f <contenedor>
 ```
 
 ---
-## Garantía de scripts en contenedores
+## 🛡️ Garantía de scripts en contenedores
 Medidas para asegurar que `entrypoint.sh` y `start.sh` se copian correctamente:
 1. `.gitattributes` fuerza fin de línea LF en scripts (`*.sh`) evitando `^M`.
 2. `Dockerfile.fooocus-gpu` copia `start.sh` en la última capa (cambios rápidos sin reinstalar deps).
@@ -203,7 +203,7 @@ Problemas típicos tras clonar en máquina nueva:
 
 
 ---
-## Estructura
+## 📁 Estructura
 ```text
 ├── docker-compose.yml
 ├── stack-ai/
@@ -221,13 +221,13 @@ Problemas típicos tras clonar en máquina nueva:
 ```
 
 ---
-## Roadmap
+## 🗓️ Roadmap
 * Salida JSON (-Json)
 * Endpoint /health
 * Métricas de build
 
 ---
-## Créditos
+## 🙏 Créditos
 OpenWebUI · Ollama · Fooocus · SonarQube · Bootstrap
 
 ---

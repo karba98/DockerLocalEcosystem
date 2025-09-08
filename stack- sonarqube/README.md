@@ -1,14 +1,14 @@
-# Stack SonarQube
+# Stack SonarQube 🔍
 
 Análisis de calidad y seguridad de código con SonarQube + Postgres sobre la red compartida `proxy-network`.
 
-## Componentes
+## 🧩 Componentes
 | Servicio | Imagen | Puerto interno | Puerto host | Persistencia |
 |----------|--------|----------------|-------------|--------------|
 | sonarqube | sonarqube:latest | 9000 | 9000 | conf, extensions, logs, data |
 | db (Postgres) | postgres:latest | 5432 | (no mapeado) | data |
 
-## Arquitectura
+## 🗺️ Arquitectura
 ```mermaid
 flowchart LR
     subgraph proxy-network
@@ -23,7 +23,7 @@ flowchart LR
     P --> DB
 ```
 
-## Flujo de arranque
+## ⚙️ Flujo de arranque
 ```mermaid
 sequenceDiagram
     participant C as docker compose
@@ -35,7 +35,7 @@ sequenceDiagram
     SQ-->>C: web up 9000
 ```
 
-## Volúmenes
+## 💾 Volúmenes
 | Volumen | Uso |
 |---------|-----|
 | sonarqube_conf | Configuración |
@@ -44,7 +44,7 @@ sequenceDiagram
 | sonarqube_data | Datos / índices |
 | sonarqube_db_data | Datos Postgres |
 
-## Backup rápido
+## 📦 Backup rápido
 Backup de datos SonarQube:
 ```
 docker run --rm -v sonarqube_data:/from -v $(pwd):/to busybox sh -c 'tar czf /to/sonarqube_data.tgz -C /from .'
@@ -54,7 +54,7 @@ Dump DB:
 docker exec -it sonarqube_db pg_dump -U sonarqube sonarqube > backup.sql
 ```
 
-## Scanner (ejemplo)
+## 🛰️ Scanner (ejemplo)
 `sonar-project.properties`:
 ```
 sonar.projectKey=demo
@@ -67,10 +67,10 @@ Ejecutar:
 sonar-scanner -Dsonar.host.url=http://localhost:9000 -Dsonar.login=<TOKEN>
 ```
 
-## Integración Proxy Manager
+## 🌐 Integración Proxy Manager
 Crear Proxy Host apuntando a `sonarqube:9000`. Para subruta usar cabecera `X-Forwarded-Prefix`.
 
-## Variables clave
+## 🔑 Variables clave
 | Variable | Servicio | Propósito |
 |----------|----------|-----------|
 | SONAR_JDBC_URL | sonarqube | Conexión Postgres |
@@ -80,7 +80,7 @@ Crear Proxy Host apuntando a `sonarqube:9000`. Para subruta usar cabecera `X-For
 | POSTGRES_PASSWORD | db | Password |
 | POSTGRES_DB | db | DB nombre |
 
-## Troubleshooting
+## 🩺 Troubleshooting
 | Síntoma | Causa | Fix |
 |---------|-------|-----|
 | Arranque lento | Migraciones | Esperar 2-4 min |
@@ -88,15 +88,15 @@ Crear Proxy Host apuntando a `sonarqube:9000`. Para subruta usar cabecera `X-For
 | Plugins no persisten | Falta volumen extensions | Añadir volumen |
 | Uso disco alto | Índices históricos | Limpieza UI |
 
-## Mantenimiento
+## 🧹 Mantenimiento
 1. Logs: `docker logs -f sonarqube`.
 2. Actualizar: `docker pull sonarqube:latest && docker compose up -d`.
 3. Backup antes de upgrades mayores.
 
-## Roadmap
+## 🚀 Roadmap
 * Contenedor sonar-scanner auxiliar.
 * Export métricas Prometheus.
 * Webhook quality gate.
 
-## Créditos
+## 🙏 Créditos
 SonarQube · Postgres
