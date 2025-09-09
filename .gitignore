@@ -24,3 +24,5 @@ stack-ai/openhands-data/
 sonar-project.properties
 .scannerwork/.sonar_lock
 .scannerwork/report-task.txt
+stack-rustdesk/client-config/
+stack-rustdesk/data

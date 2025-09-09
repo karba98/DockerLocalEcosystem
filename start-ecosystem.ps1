@@ -49,7 +49,9 @@ if (-not $networkExists) {
 $allStacks = @()
 if (Test-Path './docker-compose.yml') { $allStacks += @{name='Principal'; path='.'} }
 if (Test-Path './stack-ai/docker-compose.yml') { $allStacks += @{name='stack-ai'; path='./stack-ai'} }
-if (Test-Path './stack- sonarqube/docker-compose.yml') { $allStacks += @{name='stack-sonarqube'; path='./stack- sonarqube'} }
+if (Test-Path './stack-sonarqube/docker-compose.yml') { $allStacks += @{name='stack-sonarqube'; path='./stack-sonarqube'} }
+if (Test-Path './stack-portainer/docker-compose.yml') { $allStacks += @{name='stack-ortainer'; path='./stack-portainer'} }
+if (Test-Path './stack-rustdesk/docker-compose.yml') { $allStacks += @{name='stack-rustDesk'; path='./stack-rustdesk'} }
 
 if ($List) {
     Write-Host "Stacks disponibles:" -ForegroundColor Cyan
@@ -170,9 +172,15 @@ if ($BuildOnly) {
 foreach ($stack in $selected) {
     if ($stack.path -ne '.') {
         Write-Host "Levantando $($stack.name)..."
-        Push-Location $stack.path
-        docker compose up -d
+    Push-Location $stack.path
+    if ($stack.name -eq 'RustDesk') {
+            $baseTools = Get-Location
+            $paths = @('data', 'client-config', 'client-config/apps') | ForEach-Object { Join-Path $baseTools $_ }
+            foreach ($d in $paths) { if (-not (Test-Path $d)) { New-Item -ItemType Directory -Path $d | Out-Null } }
+        }
+    docker compose up -d
         Pop-Location
+    if ($stack.name -eq 'Portainer') { Write-Host "Portainer disponible en: http://localhost:9100" -ForegroundColor Green }
     }
 }
 # Levantar el principal (proxy-nginx) al final si fue seleccionado

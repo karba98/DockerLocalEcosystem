@@ -15,17 +15,28 @@ flowchart LR
         OW[OpenWebUI:8083]
         F[Fooocus:8084]
         S[SonarQube:9000]
-        P[Portainer:9100]
+        RDC[rustdesk-client · webtop]
+    %% Portainer es un stack separado pero comparte esta red
+    P[Portainer:9100/9443]
+    end
+    subgraph Host
+        HBS[hbbs · broker]
+        HBR[hbbr · relay]
     end
     U -->|HTTP| N
+    U -->|HTTP 9100/9443| P
     N -->|/ollama/*| OL
     N -->|/openwebui/*| OW
     %% (Fooocus y Sonar pueden estar comentados en nginx.conf si no se usan)
     N -->|/fooocus/*| F
     N -->|/sonarqube/*| S
     OW -->|REST /ollama| OL
+    N -->|/rustdesk/*| RDC
+    RDC --> HBS
+    RDC --> HBR
 ```
-Rutas: /ollama/ /openwebui/ /fooocus/ /sonarqube/  (Portainer vía puerto 9100 directo o proxy host)
+Rutas: /ollama/ /openwebui/ /fooocus/ /sonarqube/  (Portainer vía puertos 9100/9443 directo; opcional proxy host)
+Cliente RustDesk (webtop) servido vía proxy (configura un Proxy Host / subruta /rustdesk/)
 
 ---
 ## 🔧 Servicios
@@ -36,15 +47,17 @@ Rutas: /ollama/ /openwebui/ /fooocus/ /sonarqube/  (Portainer vía puerto 9100 d
 - SonarQube (calidad código)
 - Portainer (gestión Docker)
     - Acceso: http://localhost:9100 (o 9443 HTTPS)
+- RustDesk Server (hbbs/hbbr) + Cliente webtop (vía proxy)
 
 ---
 ## 🧱 Stacks
 | Nombre | Ruta | Contenido |
 |--------|------|-----------|
 | Principal | ./ | Nginx Proxy Manager |
-| Portainer | (en principal) | Gestión visual de contenedores (http://localhost:9100) |
+| stack-portainer | ./stack-portainer | Gestión visual de contenedores (http://localhost:9100) |
 | stack-ai | ./stack-ai | Ollama, OpenWebUI, Fooocus |
-| stack-sonarqube | ./stack- sonarqube | SonarQube + Postgres |
+| stack-sonarqube | ./stack-sonarqube | SonarQube + Postgres |
+| stack-rustdesk | ./stack-rustdesk | RustDesk Server + cliente webtop |
 
 ---
 ## ✅ Requisitos
@@ -69,7 +82,7 @@ cd docker-local-ecosystem
 ## 🛠️ Scripts (PowerShell / Bash)
 Parámetros:
 ```
--Stacks <lista>   Principal stack-ai stack-sonarqube All
+-Stacks <lista>   Principal stack-ai stack-sonarqube stack-portainer stack-rustdesk All
 -Auto             Todos los stacks
 -SkipBuild        No build
 -BuildOnly        Solo construir
@@ -190,7 +203,7 @@ Medidas para asegurar que `entrypoint.sh` y `start.sh` se copian correctamente:
 9. Variable `OLLAMA_AUTO_PULL` permite elegir modelo inicial (por defecto llama2). `OLLAMA_MAX_WAIT` controla espera de readiness.
 10. Las carpetas `data/nginx-proxy-manager/{data,letsencrypt}` se crean automáticamente si no existen al levantar el stack principal.
 11. Si existía un contenedor antiguo `proxy-nginx` basado en `nginx:latest` se elimina automáticamente antes de levantar Nginx Proxy Manager para evitar servir un `index.html` obsoleto.
-12. Portainer se inicia junto al stack principal; acceso inicial: http://localhost:9100 (crear usuario admin la primera vez).
+12. Portainer es un stack separado. Inícialo con `-Stacks stack-portainer`. Acceso: http://localhost:9100 (o https://localhost:9443).
 
 Problemas típicos tras clonar en máquina nueva:
 | Síntoma | Causa | Fix |
@@ -211,8 +224,14 @@ Problemas típicos tras clonar en máquina nueva:
 │   ├── Dockerfile.fooocus-gpu
 │   ├── entrypoint.sh
 │   └── start.sh
-├── stack- sonarqube/
+├── stack-sonarqube/
 │   └── docker-compose.yml
+├── stack-portainer/
+│   └── docker-compose.yml
+├── stack-rustdesk/
+│   ├── docker-compose.yml
+│   ├── Dockerfile.rustdesk-client
+│   └── init-rustdesk.sh
 ├── data/
 │   └── nginx-proxy-manager/
 ├── start-ecosystem.sh

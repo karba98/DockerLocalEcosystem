@@ -15,22 +15,9 @@ services:
     networks:
       - proxy-network
 
-  portainer:
-    image: portainer/portainer-ce:latest
-    container_name: portainer
-    restart: unless-stopped
-    ports:
-      - "9100:9000"   # UI HTTP (externo 9100 para liberar 9000 a SonarQube)
-      - "9443:9443"   # UI HTTPS (opcional)
-    volumes:
-      - /var/run/docker.sock:/var/run/docker.sock
-      - portainer-data:/data
-    networks:
-      - proxy-network
 
 networks:
   proxy-network:
     external: true
 
 volumes:
-  portainer-data:

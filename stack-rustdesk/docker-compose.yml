@@ -1,0 +1,50 @@
+services:
+  hbbs:
+    container_name: hbbs
+    image: rustdesk/rustdesk-server:latest
+    command: hbbs
+    volumes:
+      - ./data:/root
+    network_mode: "host"
+    depends_on:
+      - hbbr
+    restart: unless-stopped
+
+  hbbr:
+    container_name: hbbr
+    image: rustdesk/rustdesk-server:latest
+    command: hbbr
+    volumes:
+      - ./data:/root
+    network_mode: "host"
+    restart: unless-stopped
+
+  rustdesk-client:
+    build:
+      context: .
+      dockerfile: Dockerfile.rustdesk-client
+    image: local/rustdesk-client-webtop:latest
+    container_name: rustdesk-client
+    environment:
+      - PUID=1000
+      - PGID=1000
+      - TZ=Europe/Madrid
+      # URL opcional directa al AppImage de RustDesk (.AppImage)
+      # - RUSTDESK_APPIMAGE_URL=https://example.com/rustdesk-x86_64.AppImage
+      # Autostart del cliente al abrir webtop
+      - RUSTDESK_AUTOSTART=false
+    volumes:
+      - ./client-config:/config
+    ports:
+      - "3005:3000"   # Webtop UI (host 3005 -> contenedor 3000)
+    # También accesible vía Nginx Proxy Manager en la red
+    shm_size: "1g"
+    restart: unless-stopped
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    networks:
+      - proxy-network
+
+networks:
+  proxy-network:
+    external: true

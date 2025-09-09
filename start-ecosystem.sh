@@ -28,7 +28,7 @@ while [[ $# -gt 0 ]]; do
   -List|--list) LIST=1; shift ;;
     -h|--help)
       echo "Uso: $0 [opciones]\n"
-      echo "Opciones:"; echo "  -Stacks <nombres>   Selecciona stacks (Principal stack-ai stack-sonarqube All)"; \
+  echo "Opciones:"; echo "  -Stacks <nombres>   Selecciona stacks (Principal Portainer stack-ai stack-sonarqube RustDesk All)"; \
       echo "  -Auto                Selecciona todos"; \
       echo "  -SkipBuild           No construye"; \
       echo "  -BuildOnly           Solo construye y sale"; \
@@ -70,7 +70,9 @@ stacks=()
 stack_names=()
 if [ -f docker-compose.yml ]; then stacks+=( "." ); stack_names+=("Principal"); fi
 if [ -f stack-ai/docker-compose.yml ]; then stacks+=("stack-ai"); stack_names+=("stack-ai"); fi
-if [ -f "stack- sonarqube/docker-compose.yml" ]; then stacks+=("stack- sonarqube"); stack_names+=("stack-sonarqube"); fi
+if [ -f "stack-sonarqube/docker-compose.yml" ]; then stacks+=("stack-sonarqube"); stack_names+=("stack-sonarqube"); fi
+if [ -f stack-portainer/docker-compose.yml ]; then stacks+=("stack-portainer"); stack_names+=("Portainer"); fi
+if [ -f stack-rustdesk/docker-compose.yml ]; then stacks+=("stack-rustdesk"); stack_names+=("RustDesk"); fi
 
 if [[ $LIST -eq 1 ]]; then
   for i in "${!stack_names[@]}"; do
@@ -85,6 +87,9 @@ for i in "${!stacks[@]}"; do
   key=${stack_names[$i],,}
   map[$key]=${stacks[$i]}
 done
+map[stack-tools]="stack-rustdesk"
+map[stack-rustdesk]="stack-rustdesk"
+map[portainer]="stack-portainer"
 
 # --- Selección ---
 selected=()
@@ -139,6 +144,8 @@ fi
 build_stack() {
   local path="$1"; local name="$2"
   [[ $SKIP_BUILD -eq 1 ]] && return 0
+  # Si se trata de un servicio específico (formato dir:service), saltar build
+  if [[ "$path" == *":"* ]]; then return 0; fi
   if [[ ! -f "$path/docker-compose.yml" ]]; then return 0; fi
   local flags=()
   [[ $NO_PULL -eq 0 ]] && flags+=(--pull)
@@ -151,7 +158,7 @@ build_stack() {
 for idx in "${!selected[@]}"; do
   p=${selected[$idx]}
   if [[ $p != "." ]]; then
-    n="${p}"; [[ $p == "stack- sonarqube" ]] && n="stack-sonarqube"
+    n="${p}"; [[ $p == "stack-sonarqube" ]] && n="stack-sonarqube"
     build_stack "$p" "$n"
   fi
 done
@@ -169,7 +176,14 @@ fi
 for p in "${selected[@]}"; do
   if [[ $p != "." ]]; then
     echo "Levantando $p..."
-    ( cd "$p" && docker compose up -d )
+  if [[ "$p" == "stack-rustdesk" ]]; then
+      base_tools="$(pwd)/stack-rustdesk"
+      mkdir -p "$base_tools/data" "$base_tools/client-config/apps"
+    fi
+  ( cd "$p" && docker compose up -d )
+    if [[ "$p" == "stack-portainer" ]]; then
+      echo "Portainer disponible en: http://localhost:9100"
+    fi
   fi
 done
 
@@ -185,10 +199,7 @@ for p in "${selected[@]}"; do
   # Crear carpetas Nginx Proxy Manager
   base="$(pwd)/data/nginx-proxy-manager"
   mkdir -p "$base/data" "$base/letsencrypt"
-    docker compose up -d
-    if docker ps --format '{{.Names}}' | grep -q '^portainer$'; then
-      echo "Portainer disponible en: http://localhost:9100"
-    fi
+  docker compose up -d
   fi
 done
 

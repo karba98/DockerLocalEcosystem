@@ -1,0 +1,16 @@
+FROM ghcr.io/linuxserver/webtop:ubuntu-mate
+
+# Instalación de dependencias mínimas para AppImage
+USER root
+RUN apt-get update \
+ && apt-get install -y --no-install-recommends ca-certificates libfuse2 wget \
+ && rm -rf /var/lib/apt/lists/*
+
+ENV RUSTDESK_APPIMAGE_URL="" \
+    RUSTDESK_AUTOSTART="false"
+
+# Script de inicialización (cont-init.d) para preparar RustDesk sin cambiar ENTRYPOINT
+COPY init-rustdesk.sh /etc/cont-init.d/10-rustdesk.sh
+RUN chmod +x /etc/cont-init.d/10-rustdesk.sh
+
+# Mantener ENTRYPOINT/CMD por defecto de la imagen (s6 /init)
